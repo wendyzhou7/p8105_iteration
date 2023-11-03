@@ -1,5 +1,5 @@
 ---
-title: "Writing R Packages I"
+title: "Writing R functions"
 output:
   html_document: 
     toc: true
@@ -210,10 +210,6 @@ nsduh_results =
     nsduh_import(html = nsduh_html, table_number = 5, outcome_name = "heroin")
 )
 ```
-
-
-
-
 
 
 

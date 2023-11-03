@@ -1530,6 +1530,122 @@ z_score(c(TRUE, TRUE, FALSE, TRUE)) # takes mean and sd of t/f converted to 1 an
 z_score(iris) # doesn&#39;t know how to take mean and sd of an entire dataframe
 </code></pre>
 </div>
+<div id="multiple-outputs" class="section level3">
+<h3>Multiple outputs</h3>
+<p>Write a function that returns the means and sd form a sample fo
+numbers</p>
+<pre class="r"><code>mean_and_sd = function(x) {
+  
+    if(!is.numeric(x)) {
+    stop(&quot;Argument should be numbers&quot;)
+  } else if (length(x) &lt; 2) {
+    stop(&quot;You need at least 2 numbers to get z-score&quot;)
+  }
+  
+  mean_x = mean(x)
+  sd_x = sd(x)
+  
+  tibble(
+    mean = mean_x,
+    sd = sd_x
+  )
+}</code></pre>
+<p>Check if it works:</p>
+<pre class="r"><code>mean_and_sd(x_vec)</code></pre>
+</div>
+<div id="start-getting-means-and-sds" class="section level3">
+<h3>Start getting means and sds</h3>
+<pre class="r"><code>
+x_vec = rnorm(n = 30, mean = 5, sd = 0.5)
+
+  tibble(
+    mean = mean(x_vec),
+    sd = sd(x_vec)
+  )
+
+# different sample is being generated every time this is ran</code></pre>
+<p>Write a function that uses <code>n</code>, a true mean, and true SD
+as inputs</p>
+<pre class="r"><code>sim_mean_sd = function(n_obs, mu, sigma) {
+  
+  x_vec = rnorm(n = n_obs, mean = mu, sd = sigma)
+  
+  tibble(
+    mean = mean(x_vec),
+    sd = sd(x_vec)
+  )  
+}
+
+
+sim_mean_sd(n_obs = 300, mu = 5, sigma = 0.5)
+
+sim_mean_sd(12, 24, 4) </code></pre>
+</div>
+<div id="lotr-dataset" class="section level3">
+<h3>LOTR Dataset</h3>
+<pre class="r"><code>
+# what we did last time:
+fellowship_ring = readxl::read_excel(&quot;./LotR_Words.xlsx&quot;, range = &quot;B3:D6&quot;) |&gt;
+  mutate(movie = &quot;fellowship_ring&quot;)
+
+
+# function that does the same thing:
+lotr_load_and_tidy = function(path = &quot;./LotR_Words.xlsx&quot;, cell_range, movie_name) {
+  
+  movie_df = 
+    readxl::read_excel(path, range = cell_range) |&gt; 
+    mutate(movie = movie_name) |&gt; # can add more things inside function:
+    janitor::clean_names() |&gt; 
+    pivot_longer(
+      female:male,
+      names_to = &quot;sex&quot;,
+      values_to = &quot;words&quot;
+    )
+  movie_df
+}
+
+# function in use
+lort_df = 
+  bind_rows(
+    lotr_load_and_tidy(cell_range = &quot;B3:D6&quot;, movie_name = &quot;fellowship_ring&quot;),
+    lotr_load_and_tidy(cell_range = &quot;F3:H6&quot;, movie_name = &quot;two_towers&quot;),
+    lotr_load_and_tidy(cell_range = &quot;J3:L6&quot;, movie_name = &quot;return_king&quot;)
+)</code></pre>
+</div>
+<div id="nsduh" class="section level3">
+<h3>NSDUH</h3>
+<pre class="r"><code>nsduh_url = &quot;http://samhda.s3-us-gov-west-1.amazonaws.com/s3fs-public/field-uploads/2k15StateFiles/NSDUHsaeShortTermCHG2015.htm&quot;
+
+nsduh_html = read_html(nsduh_url)</code></pre>
+<p>function</p>
+<pre class="r"><code>nsduh_import = function(html, table_number, outcome_name){
+  
+  html |&gt; 
+  html_table(table_number) |&gt; 
+  nth(1) |&gt;
+  slice(-1) |&gt; 
+  select(-contains(&quot;P Value&quot;)) |&gt;
+  pivot_longer(
+    -State,
+    names_to = &quot;age_year&quot;, 
+    values_to = &quot;percent&quot;) |&gt;
+  separate(age_year, into = c(&quot;age&quot;, &quot;year&quot;), sep = &quot;\\(&quot;) |&gt;
+  mutate(
+    year = str_replace(year, &quot;\\)&quot;, &quot;&quot;),
+    percent = str_replace(percent, &quot;[a-c]$&quot;, &quot;&quot;),
+    percent = as.numeric(percent),
+    outcome = outcome_name) |&gt;
+  filter(!(State %in% c(&quot;Total U.S.&quot;, &quot;Northeast&quot;, &quot;Midwest&quot;, &quot;South&quot;, &quot;West&quot;)))
+}
+
+#apply
+nsduh_results = 
+  bind_rows(
+    nsduh_import(html = nsduh_html, table_number = 1, outcome_name = &quot;marj&quot;),
+    nsduh_import(html = nsduh_html, table_number = 4, outcome_name = &quot;cocaine&quot;),
+    nsduh_import(html = nsduh_html, table_number = 5, outcome_name = &quot;heroin&quot;)
+)</code></pre>
+</div>
 
 
 
